@@ -1,3 +1,5 @@
+library geojson_vt_dart;
+
 import 'convert.dart';
 //import 'wrap.dart';
 //import 'clip.dart';
