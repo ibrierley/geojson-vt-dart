@@ -22,7 +22,7 @@ environment:
   sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
-  geojson_vi: any
+        #geojson_vi: any
 
 dev_dependencies:
   test: ^1.5.1
