@@ -234,10 +234,10 @@ class GeoJSONVT {
       if (debug > 1) print('finished clipping');
       //print("insplit, clip  $tl     $bl     $tr     $br");
 
-      stack.addAll([tl ?? [], z + 1, x * 2,     y * 2]);
-      stack.addAll([bl ?? [], z + 1, x * 2,     y * 2 + 1]);
-      stack.addAll([tr ?? [], z + 1, x * 2 + 1, y * 2]);
-      stack.addAll([br ?? [], z + 1, x * 2 + 1, y * 2 + 1]);
+      stack.addAll([tl, z + 1, x * 2,     y * 2]);
+      stack.addAll([bl, z + 1, x * 2,     y * 2 + 1]);
+      stack.addAll([tr, z + 1, x * 2 + 1, y * 2]);
+      stack.addAll([br, z + 1, x * 2 + 1, y * 2 + 1]);
 
       //print("STACK IS $stack");
 
