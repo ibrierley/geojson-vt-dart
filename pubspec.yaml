@@ -1,5 +1,5 @@
-name: geojson_vt
-description: Vector tiles for flutter_map
+name: geojson_vt_dart
+description: Geojson slicer for dart
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
