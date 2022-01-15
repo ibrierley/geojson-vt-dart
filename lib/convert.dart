@@ -147,7 +147,6 @@ void convertLines(rings, out, tolerance, isPolygon) {
   for (var i = 0; i < rings.length; i++) {
     List geom = [];
     convertLine(rings[i], geom, tolerance, isPolygon);
-    print("YYYY ${geom.length} ,${geom.reduce((a, b) => a + b)}");
     out.add(geom);
   }
 }
