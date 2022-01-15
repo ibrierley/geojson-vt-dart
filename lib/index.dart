@@ -85,7 +85,7 @@ class GeoJSONVT {
 
     if (features.length > 0) splitTile(features, 0, 0, 0, null, null, null);
 
-    print("$options");
+    //print("$options");
 
    // print("$tiles");
 
@@ -99,7 +99,7 @@ class GeoJSONVT {
   @override toString() {
     var out = "";
     tiles.forEach((tile,index) {
-      out += "\n" + tile.toString();
+      out += "Index: $index, Tile:" + tile.toString();
     });
     return out;
   }
