@@ -1,6 +1,6 @@
 import 'feature.dart';
 import 'clip.dart';
-import 'package:geojson_vi/geojson_vi.dart';
+//import 'package:geojson_vi/geojson_vi.dart';
 import 'classes.dart';
 
 List wrap(features, options) {
