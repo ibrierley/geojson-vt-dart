@@ -1,4 +1,3 @@
-//import 'package:geojson_vi/geojson_vi.dart';
 import 'dart:math' as math;
 import 'classes.dart';
 
@@ -26,7 +25,6 @@ class SimpTile {
 }
 
 SimpTile createTile(List features, z, tx, ty, Map options) {
-  //print("createtile      z=$z   tx=$tx    ty=$ty   options=$options    features $features size ${features.size}   start ${features.start}");
   num tolerance = (z == options['maxZoom']) ? 0 : options['tolerance'] / ((1 << z) * options['extent']);
 
   SimpTile tile = SimpTile([], z, tx, ty);
@@ -45,20 +43,10 @@ addFeature(SimpTile tile, feature, tolerance, options) {
   final type = feature['type'];
   final simplified = [];
 
-  //print("addfeature geomsize ${geom.size} feature $feature");
-
   tile.minX = math.min(tile.minX, feature['minX']);
   tile.minY = math.min(tile.minY, feature['minY']);
   tile.maxX = math.max(tile.maxX, feature['maxX']);
   tile.maxY = math.max(tile.maxY, feature['maxY']);
-/*
-  tile['minX'] = math.min(tile['minX'], feature['minX']);
-  tile['minY'] = math.min(tile['minY'], feature['minY']);
-  tile['maxX'] = math.max(tile['maxX'], feature['maxX']);
-  tile['maxY'] = math.max(tile['maxY'], feature['maxY']);
-
- */
-
 
   if (type == "Point" || type == "MultiPoint") {
     for (int i = 0; i < geom.length; i += 3) {
@@ -68,7 +56,6 @@ addFeature(SimpTile tile, feature, tolerance, options) {
     }
   }  else if (type == "LineString") {
     addLine(simplified, geom, tile, tolerance, false, false);
-    //print("addLine $geom ${geom.size}  feat $feature    tile $tile");
   } else if (type == "MultiLineString" || type == "Polygon") {
     for (int i = 0; i < geom.length; i++) {
       addLine(simplified, geom[i], tile, tolerance, type == "Polygon", i == 0);
@@ -85,47 +72,36 @@ addFeature(SimpTile tile, feature, tolerance, options) {
   }
 
   if (simplified.length > 0) {
-    //print("DOING SIMPLIFIED geomstart is ${geom.start}");
     var tags;
     if( feature['tags'] != null ) tags = feature['tags'];
 
     if (type == "LineString" && options['lineMetrics']) {
       tags = {};
       feature['tags'].forEach((key, val) {
-        //for (var key in feature['tags']) tags[key] = feature['tags'][key];
         tags[key] = feature['tags'][key];
       });
       tags['mapbox_clip_start'] = geom.start / geom.size;
       tags['mapbox_clip_end'] = geom.end / geom.size;
     }
 
-    //print("TILE IS NOWx $tile");
-    //print("!!!!!!!!!TYPE HERE IS $type");
     final tileFeature = {
       'geometry' : simplified,
       'type' : (type == "Polygon" || type == "MultiPolygon") ? 3 :
         (type == "LineString" || type == "MultiLineString") ? 2 : 1,
       'tags' : tags
     };
-    //print("SIMPLIFIED IS $simplified");
 
-    //print("FEATURE TYPE IS ${tileFeature['type']}");
     if (feature['id'] != null) {
       tileFeature['id'] = feature['id'];
     }
-    //print("TILE.FEATURE.ADD $tileFeature");
     tile.features.add(tileFeature);
-    //print("TILE IS NOW $tile");
   }
 }
 
 void addLine(result, List geom, tile, tolerance, isPolygon, isOuter) {
   final sqTolerance = tolerance * tolerance;
 
-  //List g = [...geom]; // to convert it to get a size from classes.dart
   List g = geom as List;
-
-  //print("SIZE IS ${g.size}");
 
   if (tolerance > 0 && (g.size < (isPolygon ? sqTolerance : tolerance))) {
     tile.numPoints += (g.length / 3).toInt();
@@ -137,7 +113,6 @@ void addLine(result, List geom, tile, tolerance, isPolygon, isOuter) {
   for (int i = 0; i < geom.length; i += 3) {
     if (tolerance == 0 || geom[i + 2] > sqTolerance) {
       tile.numSimplified++;
-      //print("ADDLINE ${geom[i]}");
       ring.addAll([geom[i], geom[i + 1]]);
     }
     tile.numPoints++;
@@ -145,7 +120,6 @@ void addLine(result, List geom, tile, tolerance, isPolygon, isOuter) {
 
   if (isPolygon) rewind(ring, isOuter);
 
-  //print( "ring ${ring}");
   result.add(ring);
 }
 

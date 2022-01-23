@@ -1,8 +1,6 @@
 library geojson_vt_dart;
 
 import 'convert.dart';
-//import 'wrap.dart';
-//import 'clip.dart';
 import 'tile.dart';
 import 'clip.dart';
 import 'dart:convert';
@@ -11,16 +9,6 @@ import 'wrap.dart';
 import 'package:geojson_vi/geojson_vi.dart';
 import 'classes.dart';
 import 'dart:io';
-/*
-
-extension JSList<T> on List<T> {
-  static final _startValues = Expando<int>();
-
-  int get start => _startValues[this] ?? 0;
-  set start(int x) => _startValues[this] = x;
-}
-
- */
 
 Map defaultOptions = {
   'maxZoom': 14,            // max zoom to preserve detail on
@@ -45,27 +33,15 @@ class GeoJSONVT {
   GeoJSONVT( data, passedOptions) : options = extend({'ss': 'ff'}, passedOptions) {///extend(defaultOptions, passedOptions) {
     options = extend(defaultOptions, options);
 
-    //print("DEFOPTIONS!!!!!!!!!!!!!! $defaultOptions");
-    //print("OPTIONS!!!!!!!!!!!!!! $passedOptions");
-
-
-    print("Start GeoJSONVT $options");
-
     var debug = options['debug'];
 
     if (options['maxZoom'] < 0 || options['maxZoom'] > 24) throw Exception('maxZoom should be in the 0-24 range');
     if (options['promoteId'] != null && options['generateId']) throw Exception('promoteId and generateId cannot be used together.');
 
     // projects and adds simplification info
-    //var features = 1; //convert(data, options);
-    //print("Data is $data");
     var features = convert(data, options);
-    print("OPTIONS $options");
-
-    //print("FEATURES $features");
 
     List t = features[0]['geometry'];
-    //print("features after convert are $features, size is ${t.size}");
 
     tiles = {};
     List tileCoords = [];
@@ -75,25 +51,10 @@ class GeoJSONVT {
       //total = 0;
     }
 
-    //print("FEATURE LENIND1 IS ${features.length}");
-
     // wraps features (ie extreme west and extreme east)
     features = wrap(features, options);
-    //print("features $features");
-
-
 
     if (features.length > 0) splitTile(features, 0, 0, 0, null, null, null);
-
-    //print("$options");
-
-   // print("$tiles");
-
-    ///print("FEATURES OF 0,0,0 $features");
-    ///print("TILES WITH 0,0,0 added are $tiles");
-
-    //exit(2);
-
   }
 
   @override toString() {
@@ -115,48 +76,32 @@ class GeoJSONVT {
     final options = this.options;
     final debug = options['debug'];
 
-    //print("FEATURE LENSPLITTILE IS ${features.length}");
-    //print("XXSPLITTILE $z $x $y $cz $cx $cy    $features");
-
     // avoid recursion by using a processing queue
 
-    //print("STACK IS ${stack.length}");
     while (stack.length > 0) {
       y = stack.removeLast();
       x = stack.removeLast();
       z = stack.removeLast();
 
-
-      //print("HERE1 FEATURES LEN IS ${features.length} stack len is ${stack.length}");
       features = stack.removeLast();
-      //print("HERE2 FEATURES LEN IS ${features.length} stack len is ${stack.length}");
-
-      //print("Stack Length ${stack.length} features $features");
 
       final z2 = 1 << z;
       final id = toID(z, x, y);
       var tile = this.tiles[id];
 
-
-      //print("Split tile: ID is $id from $z $x $y   tile for id $id is $tile");
-
       if (tile == null) {
-        //print("tile is null");
-        //if (debug > 1) console.time('creation');
 
         if(features.isNotEmpty ) {
           ///print("Creating tile from Index.dart $z $x $y $features ${features[0]!['geometry']}");
         } else {
-          print("features is empty ");
+          //print("features is empty ");
         }
         tile = this.tiles[id] = createTile(features, z, x, y, options);
 
         if( options['debug'] > 1 ) {
           print("tile z$z-$x-$y (features: ${tile.numFeatures}, points: ${tile.numPoints}, simplified: ${tile.numSimplified})");
         }
-        //print("SPLIT TILE $tile");
 
-        //print("tile is $tile features are $features");;
         this.tileCoords.add({z, x, y});
 
 
@@ -170,11 +115,8 @@ class GeoJSONVT {
         }
       }
 
-      //print("TILE SOURCE INDEX IS ${tile.source}");
       // save reference to original geometry in tile so that we can drill down later if we stop now
       tile.source = features;
-
-      //print("here2");
 
       // if it's the first-pass tiling
       if (cz == null) {
@@ -197,25 +139,18 @@ class GeoJSONVT {
 
       if (debug > 1) print('clipping');
 
-      //print("BUFFER!!!! ${options['buffer']} ${options['extent']}");
-
       // values we'll use for clipping
       final k1 = 0.5 * options['buffer'] / options['extent'];
       final k2 = 0.5 - k1;
       final k3 = 0.5 + k1;
       final k4 = 1 + k1;
 
-     // print("KKKKKKK splittile $k1 $k2 $k3 $k4");
-
       List? tl = [];
       List? bl = [];
       List? tr = [];
       List? br = [];
 
-      //print("CLIPLEFT");
-      //print("FEATUREINDEX LEN IS ${features.length}");
       List? left  = clip(features, z2, x - k1, x + k3, 0, tile.minX, tile.maxX, options);
-      //print("CLIPRIGHT");
       List? right = clip(features, z2, x + k2, x + k4, 0, tile.minX, tile.maxX, options);
       features = [];
 
@@ -232,15 +167,11 @@ class GeoJSONVT {
       }
 
       if (debug > 1) print('finished clipping');
-      //print("insplit, clip  $tl     $bl     $tr     $br");
 
       stack.addAll([tl, z + 1, x * 2,     y * 2]);
       stack.addAll([bl, z + 1, x * 2,     y * 2 + 1]);
       stack.addAll([tr, z + 1, x * 2 + 1, y * 2]);
       stack.addAll([br, z + 1, x * 2 + 1, y * 2 + 1]);
-
-      //print("STACK IS $stack");
-
     }
 
     print("total ${this.total}, stats ${this.stats}");
@@ -253,24 +184,17 @@ class GeoJSONVT {
 
   SimpTile? getTile(z, x, y) {
 
-    //print("\n\n\ngetTile0");
-    //print("TILES! ${this.tiles}");
-
     Map options = this.options;
     final extent = options['extent'];
     final debug = options['debug'];
 
     if (z < 0 || z > 24) return null;
 
-    //print("getTile1 $z $x $y");
-
     final z2 = 1 << z;
     x = (x + z2) & (z2 - 1); // wrap tile x coordinate
 
     final id = toID(z, x, y);
     if (this.tiles[id] != null) return transformTile(this.tiles[id], extent);
-
-    //print("getTile2 id is $id");
 
     if (debug > 1) print('drilling down to $z-$x-$y');
 
@@ -284,25 +208,18 @@ class GeoJSONVT {
       x0 = x0 >> 1;
       y0 = y0 >> 1;
       parent = this.tiles[toID(z0, x0, y0)];
-     // //rint("PARENT IS ${parent!.source}");
     }
 
     if (parent == null || parent.source == null) return null;
 
     // if we found a parent tile containing the original geometry, we can drill down from it
     if (debug > 1) {
-      //print('found parent tile $z0-$x0-$y0');
       print('drilling down, splitting $z0, $x0, $y0, $z, $x, $y');
     }
 
-
-    //print("FEATURE LENSOURCE IS ${parent.source.length} ");
     this.splitTile(parent.source, z0, x0, y0, z, x, y);
 
     if (debug > 1) print('drilling down');
-
-    //print("gettile4 untransformed ${this.tiles[id]}");
-    //print("getTile5   ${transformTile(this.tiles[id], extent)}");
 
     return (this.tiles[id] != null ? transformTile(this.tiles[id], extent) : null);
   }
@@ -310,21 +227,16 @@ class GeoJSONVT {
 }
 
 void main () async {
- // var g = GeoJSONVT(geojsonFeature, {'someOption': 1 });
-  //print("$g");
-  //Slice l = Slice();
-  //print("${l.start}");
-  List l = [];
-  List l2 = [];
+//  List l = [];
+//  List l2 = [];
 
-  l.start = 2;
-  l2.start = 3;
-  print("${l.start} ${l2.start}");
+//  l.start = 2;
+//  l2.start = 3;
 
-  await testGeo();
+//  await testGeo();
 
 }
-
+/*
 Future<void> testGeo() async {
   var geojsonFeature = {
     "type": "Feature",
@@ -568,27 +480,14 @@ Future<void> testGeo() async {
       }
     ]
   };
-
-  //var geoTestJsonString = jsonEncode(geoExample);
-
-  //var f = GeoJSONFeatureCollection.fromMap(geoExample);
-  //print("$f");
-
-  //List l = [1,2,3];
-  //l.size=4;
-  //print("${l.size}");
-
-  //var g = GeoJSONVT(geoExample, {'someOption': 1 });
 }
 
 Map extend(Map dest, Map src) {
-  //print("EXTENDING!!!");
   src.forEach((key, value) {
     dest[key] = src[key];
   });
- // print("EXT $dest");
   return dest;
 }
 
-
+*/
 

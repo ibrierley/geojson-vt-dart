@@ -8,17 +8,12 @@ import 'dart:io';
 
 List convert( Map data, options ) {
   List features = [];
-  //print("XXXXXXXX ${features.size}");
-
-  //print("Data is $data ${data['type']}");
 
   if(data['type'] == 'FeatureCollection') {
-    //print("IS A  feature collection");
     for (int i = 0; i < data['features'].length; i++) {
       convertFeature(features, data['features'][i], options, i);
     }
   } else if (data['type'] == 'Feature') {
-    //print("IS A FEATURE");
     convertFeature(features, data, options, null);
 
   } else {
@@ -27,25 +22,13 @@ List convert( Map data, options ) {
     convertFeature(features, {'geometry': data}, options, null);
   }
 
-  //print("FINAL FEATURES");
-  //print("$features");
-
-  //print("${features[0]['geometry']}");
- // print("${features[0]['geometry'].size}");
-  //exit(2);
-  //List t = features[0]['geometry'];
-  //print('Converted features $features  ${t.size} ${t.end}' );
   return features;
 }
 
 void convertFeature( List featureCollection, geojson, options, index ) {
 
-  //if (geojson.geometry == null) return GeoJSONFeatureCollection([]);
-  //print("$geojson");
   if (geojson['geometry'] == null || geojson['geometry'].isEmpty) return;
   var type = geojson['geometry']['type'];
-
-  //print("zzz $type");
 
   var coords = geojson['geometry']['coordinates'];
 
@@ -60,15 +43,6 @@ void convertFeature( List featureCollection, geojson, options, index ) {
     id = index == null ? 0 : index;
   }
 
-  /*
-  if(id=="04") {
-    print("HACK RETURN");
-    //print("$featureCollection");
-    return;
-  }
-
-   */
-
   if (type == 'Point') {
     convertPoint(coords, geometry);
 
@@ -78,10 +52,7 @@ void convertFeature( List featureCollection, geojson, options, index ) {
     }
 
   } else if (type == 'LineString') {
-    //print("LINESTRING $geometry    coords $coords");
     convertLine(coords, geometry, tolerance, false);
-   // print("Converted Line, geom size is ${geometry.size}");
-    //print("LINESTRING2 ${geometry}");
 
   } else if (type == 'MultiLineString') {
     if (options['lineMetrics'] != null && options['lineMetrics']) {
@@ -116,15 +87,12 @@ void convertFeature( List featureCollection, geojson, options, index ) {
       }, options, index);
 
     }
-    //return GeoJSONFeatureCollection([]);
     return;
   } else {
     print('Input data is not a valid GeoJSON object.');
   }
 
   featureCollection.add(createFeature(id, type, geometry, geojson['properties']));
-
-  //print("FEATURE COLL ${geometry.size}");
 
   return;
 }
@@ -155,12 +123,10 @@ void convertLine(ring, List out, tolerance, bool isPolygon) {
   var x0, y0;
   var size = 0.0;
 
-  //print("${ring.length}");
   for (var j = 0; j < ring.length; j++) {
     var x = projectX(ring[j][0]);
     var y = projectY(ring[j][1]);
 
-    //print("$x $y");
     out.addAll([x, y, 0.999]); // maybe wrong...
 
     if (j > 0) {
@@ -176,7 +142,6 @@ void convertLine(ring, List out, tolerance, bool isPolygon) {
 
   final last = out.length - 3;
   out[2] = 1;
-  //print("ADD simplify func $out");
 
   simplify(out, 0, last, tolerance);
 
