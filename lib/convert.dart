@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'feature.dart';
-import 'package:geojson_vi/geojson_vi.dart';
+//import 'package:geojson_vi/geojson_vi.dart';
 import 'clip.dart';
 import 'simplify.dart';
 import 'classes.dart';

@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:geojson_vi/geojson_vi.dart';
+//import 'package:geojson_vi/geojson_vi.dart';
 import 'classes.dart';
 
 Map createFeature(id, type, List geometry, tags) {

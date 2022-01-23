@@ -1,41 +1,7 @@
 import 'feature.dart';
 import 'dart:math' as math;
-import 'package:geojson_vi/geojson_vi.dart';
+//import 'package:geojson_vi/geojson_vi.dart';
 import 'classes.dart';
-
-
-/*
-class Slice {
-  num start = 0;
-  num end = 0;
-  num size = 0;
-  GeoJSONGeometry geometry;
-  Slice({this.start=0, this.end=0, this.size=0, GeoJSONGeometry? geometry }) : geometry = geometry ?? [];
-
-  @override String toString() {
-    return "Slice: start=$start end=$end size=$size geometry=$geometry";
-  }
-
-  void add(val) => this.geometry.add(val);
-  int get length => this.geometry.length;
-
-}
-
-
- */
-
-/* clip features between two vertical or horizontal axis-parallel lines:
- *     |        |
- *  ___|___     |     /
- * /   |   \____|____/
- *     |        |
- *
- * k1 and k2 are the line coordinates
- * axis: 0 for x, 1 for y
- * minAll and maxAll: minimum and maximum coordinate value for all features
- */
-
-
 
 List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
   k1 /= scale;
@@ -48,12 +14,9 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
 
   var clipped = [];
 
-  //print("FEATURE LEN IS ${features.length}");
-
   for (var feature in features) {
     var geometry = feature['geometry'];
     var type = feature['type'];
-//print("TYPE IN clip is $type, feature is $feature");
 
     final min = axis == 0 ? feature['minX'] : feature['minY'];
     final max = axis == 0 ? feature['maxX'] : feature['maxY'];
@@ -71,7 +34,6 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
       clipPoints(geometry, newGeometry, k1, k2, axis);
 
     } else if (type == 'LineString') {
-     // print("LINESTRINGCLIP");
       clipLine(geometry, newGeometry, k1, k2, axis, false, lineMetrics);
 
     } else if (type == 'MultiLineString') {
@@ -98,7 +60,6 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
     if (newGeometry.length > 0) {
       if (lineMetrics && type == 'LineString') {
         for (var line in newGeometry) {
-          //print("CLIPPING ADD ");
           clipped.add(createFeature(feature['id'], type, line, feature['tags']));
         }
         continue;
@@ -116,12 +77,9 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
         type = (newGeometry.length == 3) ? 'Point' : 'MultiPoint';
       }
 
-      //print("IN CLIP ABOUT TO CREATE FEATURE $type $newGeometry ${newGeometry.size}");
       clipped.add(createFeature(feature['id'], type, newGeometry, feature['tags']));
-      //print("IN CLIP FINISHED CREATE FEATURE");
     }
   }
-  //print("FINISHED CLIP FUNC");
   return (clipped.length > 0) ? clipped : [];
 }
 
@@ -133,7 +91,6 @@ void clipLines(geom, newGeom, k1, k2, axis, isPolygon) {
 
 void clipLine(List geom, newGeom, k1, k2, axis, isPolygon, trackMetrics) {
 
-  //print("CLIPLINE");
   List slice = newSlice(geom);
   final intersect = axis == 0 ? intersectX : intersectY;
   num len = geom.start;
@@ -207,7 +164,6 @@ void clipLine(List geom, newGeom, k1, k2, axis, isPolygon, trackMetrics) {
     newGeom.add(slice);
   }
 
- // print("ENDCLIPLINE");
 }
 
 void clipPoints(geom, newGeom, k1, k2, axis) {
