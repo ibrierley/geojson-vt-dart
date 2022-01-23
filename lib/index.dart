@@ -6,7 +6,7 @@ import 'clip.dart';
 import 'dart:convert';
 import 'transform.dart';
 import 'wrap.dart';
-import 'package:geojson_vi/geojson_vi.dart';
+//import 'package:geojson_vi/geojson_vi.dart';
 import 'classes.dart';
 import 'dart:io';
 
@@ -482,12 +482,12 @@ Future<void> testGeo() async {
   };
 }
 
+*/
+
 Map extend(Map dest, Map src) {
   src.forEach((key, value) {
     dest[key] = src[key];
   });
   return dest;
 }
-
-*/
 
