@@ -6,20 +6,20 @@ import 'classes.dart';
 // mercator-projected space into (extent x extent) tile space.
 SimpTile transformTile(tile, extent) {
   if (tile.transformed) return tile;
-//print("transform tile $tile");
+
   final z2 = 1 << tile.z;
   final tx = tile.x;
   final ty = tile.y;
 
   for (var feature in tile.features) {
-    final geom = feature['geometry'];
-    final type = feature['type'];
+    final geom = feature.geometry;
+    final type = feature.type;
 
-    feature['geometry'] = [];
-//print("IN TRANSFORM $type $geom");
+    feature.geometry = [];
+
     if (type == 1) {
       for (int j = 0; j < geom.length; j += 2) {
-        feature['geometry'].add(transformPoint(geom[j], geom[j + 1], extent, z2, tx, ty));
+        feature.geometry.add(transformPoint(geom[j], geom[j + 1], extent, z2, tx, ty));
       }
     } else {
       for (int j = 0; j < geom.length; j++) {
@@ -27,7 +27,7 @@ SimpTile transformTile(tile, extent) {
         for (int k = 0; k < geom[j].length; k += 2) {
           ring.add(transformPoint(geom[j][k], geom[j][k + 1], extent, z2, tx, ty));
         }
-        feature['geometry'].add(ring);
+        feature.geometry.add(ring);
       }
     }
   }
@@ -38,7 +38,6 @@ SimpTile transformTile(tile, extent) {
 }
 
 List transformPoint(x, y, extent, z2, tx, ty) {
-  //print("${(extent * (x * z2 - tx)).round()} ${(extent * (y * z2 - ty)).round()}");
   return [
     (extent * (x * z2 - tx)).round(),
     (extent * (y * z2 - ty)).round()];

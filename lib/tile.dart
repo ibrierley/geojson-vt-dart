@@ -1,31 +1,9 @@
 import 'dart:math' as math;
 import 'classes.dart';
 
-class SimpTile {
-  List features = [];
-  int numPoints = 0;
-  int numSimplified = 0;
-  int numFeatures = -1; // = features.length;
-  var source = null;
-  num x = 0;
-  num y = 0;
-  num z;
-  bool transformed = false;
-  num minX = 2;
-  num minY = 1;
-  num maxX = -1;
-  num maxY = 0;
 
-  SimpTile(this.features, this.z, tx, ty) { x = tx; y = ty; }
-
-  @override String toString() {
-    return "SimpTile:    numPoints: $numPoints numSimplified: $numSimplified numFeatures: $numFeatures source: $source xyz $x,$y,$z transformed: $transformed minX: $minX minY $minY maxX: $maxX maxY: $maxY features: $features";
-  }
-
-}
-
-SimpTile createTile(List features, z, tx, ty, Map options) {
-  num tolerance = (z == options['maxZoom']) ? 0 : options['tolerance'] / ((1 << z) * options['extent']);
+SimpTile createTile(List features, z, tx, ty, GeoJSONVTOptions options) {
+  num tolerance = (z == options.maxZoom) ? 0 : options.tolerance / ((1 << z) * options.extent);
 
   SimpTile tile = SimpTile([], z, tx, ty);
   tile.numFeatures = features.length;
@@ -39,29 +17,29 @@ SimpTile createTile(List features, z, tx, ty, Map options) {
 }
 
 addFeature(SimpTile tile, feature, tolerance, options) {
-  final geom = feature['geometry'] as List;
-  final type = feature['type'];
+  final geom = feature.geometry as List;
+  final type = feature.type;
   final simplified = [];
 
-  tile.minX = math.min(tile.minX, feature['minX']);
-  tile.minY = math.min(tile.minY, feature['minY']);
-  tile.maxX = math.max(tile.maxX, feature['maxX']);
-  tile.maxY = math.max(tile.maxY, feature['maxY']);
+  tile.minX = math.min(tile.minX, feature.minX);
+  tile.minY = math.min(tile.minY, feature.minY);
+  tile.maxX = math.max(tile.maxX, feature.maxX);
+  tile.maxY = math.max(tile.maxY, feature.maxY);
 
-  if (type == "Point" || type == "MultiPoint") {
+  if (type == FeatureType.Point || type == FeatureType.MultiPoint) {
     for (int i = 0; i < geom.length; i += 3) {
       simplified.addAll([geom[i], geom[i + 1]]);
       tile.numPoints++;
       tile.numSimplified++;
     }
-  }  else if (type == "LineString") {
+  }  else if (type == FeatureType.LineString) {
     addLine(simplified, geom, tile, tolerance, false, false);
-  } else if (type == "MultiLineString" || type == "Polygon") {
+  } else if (type == FeatureType.MultiLineString || type == FeatureType.Polygon) {
     for (int i = 0; i < geom.length; i++) {
-      addLine(simplified, geom[i], tile, tolerance, type == "Polygon", i == 0);
+      addLine(simplified, geom[i], tile, tolerance, type == FeatureType.Polygon, i == 0);
     }
 
-  } else if (type == "MultiPolygon") {
+  } else if (type == FeatureType.MultiPolygon) {
 
     for (int k = 0; k < geom.length; k++) {
       final polygon = geom[k];
@@ -73,26 +51,24 @@ addFeature(SimpTile tile, feature, tolerance, options) {
 
   if (simplified.length > 0) {
     var tags;
-    if( feature['tags'] != null ) tags = feature['tags'];
+    if( feature.tags != null ) tags = feature.tags;
 
-    if (type == "LineString" && options['lineMetrics']) {
+    if (type == FeatureType.LineString && options['lineMetrics']) {
       tags = {};
-      feature['tags'].forEach((key, val) {
-        tags[key] = feature['tags'][key];
+      feature.tags.forEach((key, val) {
+        tags[key] = feature.tags[key];
       });
       tags['mapbox_clip_start'] = geom.start / geom.size;
       tags['mapbox_clip_end'] = geom.end / geom.size;
     }
 
-    final tileFeature = {
-      'geometry' : simplified,
-      'type' : (type == "Polygon" || type == "MultiPolygon") ? 3 :
-        (type == "LineString" || type == "MultiLineString") ? 2 : 1,
-      'tags' : tags
-    };
+    final t = (type == FeatureType.Polygon || type == FeatureType.MultiPolygon) ? 3 :
+    (type == FeatureType.LineString || type == FeatureType.MultiLineString) ? 2 : 1;
 
-    if (feature['id'] != null) {
-      tileFeature['id'] = feature['id'];
+    final tileFeature = TileFeature( geometry: simplified, type: t, tags: tags);
+
+    if (feature.id != null) {
+      tileFeature.id = feature.id;
     }
     tile.features.add(tileFeature);
   }

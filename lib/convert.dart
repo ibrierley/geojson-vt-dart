@@ -1,10 +1,9 @@
 import 'dart:math' as math;
-import 'feature.dart';
-//import 'package:geojson_vi/geojson_vi.dart';
+import 'dart:io';
+import 'classes.dart';
 import 'clip.dart';
 import 'simplify.dart';
-import 'classes.dart';
-import 'dart:io';
+import 'feature.dart';
 
 List convert( Map data, options ) {
   List features = [];
@@ -30,55 +29,57 @@ void convertFeature( List featureCollection, geojson, options, index ) {
   if (geojson['geometry'] == null || geojson['geometry'].isEmpty) return;
   var type = geojson['geometry']['type'];
 
+  var featureType = Feature.stringToFeatureType(type);
+
   var coords = geojson['geometry']['coordinates'];
 
-  var tolerance = math.pow(options['tolerance'] / ((1 << options['maxZoom']) * options['extent']), 2);
+  var tolerance = math.pow(options.tolerance / ((1 << options.maxZoom) * options.extent), 2);
 
   List geometry = [];
   var id = geojson['id'];
 
-  if (options['promoteId'] != null) {
-    id = geojson['properties'][options['promoteId']];
-  } else if (options['generateId']) {
+  if (options.promoteId != null) {
+    id = geojson['properties'][options.promoteId];
+  } else if (options.generateId) {
     id = index == null ? 0 : index;
   }
 
-  if (type == 'Point') {
+  if (featureType == FeatureType.Point) {
     convertPoint(coords, geometry);
 
-  } else if (type ==  'MultiPoint') {
+  } else if (featureType == FeatureType.MultiPoint) {
     for (var p in coords) {
       convertPoint(p, geometry);
     }
 
-  } else if (type == 'LineString') {
+  } else if (featureType == FeatureType.LineString) {
     convertLine(coords, geometry, tolerance, false);
 
-  } else if (type == 'MultiLineString') {
-    if (options['lineMetrics'] != null && options['lineMetrics']) {
+  } else if (featureType == FeatureType.MultiLineString) {
+    if (options.lineMetrics != null && options.lineMetrics) {
       // explode into linestrings to be able to track metrics
       for (var line in coords) {
         geometry = [];
         convertLine(line, geometry, tolerance, false);
 
-        featureCollection.add(createFeature(id, 'LineString', geometry, geojson['properties']));
+        featureCollection.add(createFeature(id, FeatureType.LineString, geometry, geojson['properties']));
       }
       return;
     } else {
       convertLines(coords, geometry, tolerance, false);
     }
 
-  } else if (type ==  'Polygon') {
+  } else if (featureType ==  FeatureType.Polygon) {
     convertLines(coords, geometry, tolerance, true);
 
-  } else if (type ==  'MultiPolygon') {
+  } else if (featureType ==  FeatureType.MultiPolygon) {
     for (var polygon in coords) {
       var newPolygon = [];
       convertLines(polygon, newPolygon, tolerance, true);
       geometry.add(newPolygon);
     }
 
-  } else if (type ==  'GeometryCollection') {
+  } else if (featureType == FeatureType.GeometryCollection) {
     for (final singleGeometry in geojson['geometry']['geometries']) {
       convertFeature(featureCollection, {
         'id': id, // to do
@@ -92,7 +93,7 @@ void convertFeature( List featureCollection, geojson, options, index ) {
     print('Input data is not a valid GeoJSON object.');
   }
 
-  featureCollection.add(createFeature(id, type, geometry, geojson['properties']));
+  featureCollection.add(createFeature(id, featureType, geometry, geojson['properties']));
 
   return;
 }

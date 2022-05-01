@@ -1,10 +1,9 @@
-import 'feature.dart';
 import 'clip.dart';
-//import 'package:geojson_vi/geojson_vi.dart';
 import 'classes.dart';
+import 'feature.dart';
 
 List wrap(features, options) {
-  final buffer = options['buffer'] / options['extent'];
+  final buffer = options.buffer / options.extent;
   List merged = features;
   final List left  = clip(features, 1, -1 - buffer, buffer,     0, -1, 2, options); // left world copy
   final List right = clip(features, 1,  1 - buffer, 2 + buffer, 0, -1, 2, options); // right world copy
@@ -24,21 +23,21 @@ List shiftFeatureCoords(features, offset) {
 
   for (int i = 0; i < features.length; i++) {
     final feature = features[i];
-    final type = feature['type'];
+    final type = feature.type;
 
-    var newGeometry;
+    var newGeometry = [];
 
-    if (type == "Point" || type == "MultiPoint" || type == "LineString") {
-      newGeometry = shiftCoords(feature['geometry'], offset);
+    if (type == FeatureType.Point || type == FeatureType.MultiPoint || type == FeatureType.LineString) {
+      newGeometry = shiftCoords(feature.geometry, offset);
 
-    } else if (type == "MultiLineString" || type == "Polygon") {
+    } else if (type == FeatureType.MultiLineString || type == FeatureType.Polygon) {
       newGeometry = [];
-      for (var line in feature['geometry']) {
+      for (var line in feature.geometry) {
         newGeometry.add(shiftCoords(line, offset));
       }
-    } else if (type == "MultiPolygon") {
+    } else if (type == FeatureType.MultiPolygon) {
       newGeometry = [];
-      for (var polygon in feature['geometry']) {
+      for (var polygon in feature.geometry) {
         final newPolygon = [];
         for (var line in polygon) {
           newPolygon.add(shiftCoords(line, offset));
@@ -46,12 +45,7 @@ List shiftFeatureCoords(features, offset) {
         newGeometry.add(newPolygon);
       }
     }
-    //if(newGeometry != null) {
-      newFeatures.add(
-          createFeature(feature['id'], type, newGeometry, feature['tags']));
-    //} else {
-    //  print("newGeometry was null, not adding");
-   // }
+      newFeatures.add(createFeature(feature.id, type, newGeometry, feature.tags));
   }
 
   return newFeatures;
