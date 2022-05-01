@@ -1,8 +1,5 @@
 import 'dart:math' as math;
 import 'classes.dart';
-import 'package:geojson/geojson.dart';
-
-
 
 Feature createFeature(id, type, List geometry, tags) {
 
