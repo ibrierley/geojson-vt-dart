@@ -53,7 +53,7 @@ addFeature(SimpTile tile, feature, tolerance, options) {
     var tags;
     if( feature.tags != null ) tags = feature.tags;
 
-    if (type == FeatureType.LineString && options['lineMetrics']) {
+    if (type == FeatureType.LineString && options.lineMetrics) {
       tags = {};
       feature.tags.forEach((key, val) {
         tags[key] = feature.tags[key];
