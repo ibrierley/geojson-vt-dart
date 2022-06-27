@@ -8,8 +8,8 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
 
   bool lineMetrics = options.lineMetrics != null ? options.lineMetrics : false;
 
-  if (minAll >= k1 && maxAll < k2) return features; // trivial accept
-  else if (maxAll < k1 || minAll >= k2) return []; // trivial reject
+  if (minAll >= k1 && maxAll <= k2) return features; // trivial accept
+  else if (maxAll < k1 || minAll > k2) return []; // trivial reject
 
   var clipped = [];
 
@@ -20,10 +20,10 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
     final min = axis == 0 ? feature.minX : feature.minY;
     final max = axis == 0 ? feature.maxX : feature.maxY;
 
-    if (min >= k1 && max < k2) { // trivial accept
+    if (min >= k1 && max <= k2) { // trivial accept
       clipped.add(feature);
       continue;
-    } else if (max < k1 || min >= k2) { // trivial reject
+    } else if (max < k1 || min > k2) { // trivial reject
       continue;
     }
 
@@ -57,27 +57,41 @@ List clip(features, scale, k1, k2, axis, minAll, maxAll, options) {
     }
 
     if (newGeometry.length > 0) {
-      if (lineMetrics && type == FeatureType.LineString) {
-        for (var line in newGeometry) {
-          clipped.add(createFeature(feature.id, type, line, feature.tags));
-        }
-        continue;
-      }
-
-      if (type == FeatureType.LineString || type == FeatureType.MultiLineString) {
+      if ((type == FeatureType.LineString || type == FeatureType.MultiLineString)) {
         if (newGeometry.length == 1) {
           type = FeatureType.LineString;
           newGeometry = newGeometry[0];
         } else {
           type = FeatureType.MultiLineString;
         }
+        //for (var line in newGeometry) {
+        //  clipped.add(createFeature(feature.id, type, line, feature.tags));
+        //}
+        //continue;
       }
+
       if (type == FeatureType.Point || type == FeatureType.MultiPoint) {
-        type = (newGeometry.length == 3) ? FeatureType.Point : FeatureType.MultiPoint;
+        type = newGeometry.length == 3 ? FeatureType.Point : FeatureType.MultiPoint;
       }
 
       clipped.add(createFeature(feature.id, type, newGeometry, feature.tags));
+
     }
+
+      //if (type == FeatureType.LineString || type == FeatureType.MultiLineString) {
+      //  if (newGeometry.length == 1) {
+      //    type = FeatureType.LineString;
+      //    newGeometry = newGeometry[0];
+      //  } else {
+      //    type = FeatureType.MultiLineString;
+      //  }
+      //}
+      //if (type == FeatureType.Point || type == FeatureType.MultiPoint) {
+      //  type = (newGeometry.length == 3) ? FeatureType.Point : FeatureType.MultiPoint;
+      //}
+
+      //clipped.add(createFeature(feature.id, type, newGeometry, feature.tags));
+    //}
   }
   return (clipped.length > 0) ? clipped : [];
 }
@@ -110,15 +124,15 @@ void clipLine(List geom, newGeom, k1, k2, axis, isPolygon, trackMetrics) {
 
     if (a < k1) {
       // ---|-->  | (line enters the clip region from the left)
-      if (b > k1) {
-        t = intersect(slice, ax, ay, bx, by, k1);
-        if (trackMetrics) slice.start = len + segLen * t;
+      if (b >= k1) {
+        intersect(slice, ax, ay, bx, by, k1);
+        //if (trackMetrics) slice.start = len + segLen * t;
       }
     } else if (a > k2) {
       // |  <--|--- (line enters the clip region from the right)
-      if (b < k2) {
-        t = intersect(slice, ax, ay, bx, by, k2);
-        if (trackMetrics) slice.start = len + segLen * t;
+      if (b <= k2) {
+        intersect(slice, ax, ay, bx, by, k2);
+        //if (trackMetrics) slice.start = len + segLen * t;
       }
     } else {
       addPoint(slice, ax, ay, az);
@@ -126,22 +140,23 @@ void clipLine(List geom, newGeom, k1, k2, axis, isPolygon, trackMetrics) {
 
     if (b < k1 && a >= k1) {
       // <--|---  | or <--|-----|--- (line exits the clip region on the left)
-      t = intersect(slice, ax, ay, bx, by, k1);
+      intersect(slice, ax, ay, bx, by, k1);
       exited = true;
     }
     if (b > k2 && a <= k2) {
       // |  ---|--> or ---|-----|--> (line exits the clip region on the right)
-      t = intersect(slice, ax, ay, bx, by, k2);
+      intersect(slice, ax, ay, bx, by, k2);
       exited = true;
     }
 
     if (!isPolygon && exited) {
-      if (trackMetrics) slice.end = len + segLen * t;
+      //if (trackMetrics) slice.end = len + segLen * t;
+      slice.size = geom.size;
       newGeom.add(slice);
       slice = newSlice(geom);
     }
 
-    if (trackMetrics) len += segLen;
+    //if (trackMetrics) len += segLen;
   }
 
   int last = geom.length - 3;
@@ -160,6 +175,7 @@ void clipLine(List geom, newGeom, k1, k2, axis, isPolygon, trackMetrics) {
 
   // add the final slice
   if (slice.length > 0) {
+    slice.size = geom.size;
     newGeom.add(slice);
   }
 
@@ -184,16 +200,18 @@ List newSlice(List line) {
   return slice;
 }
 
-double intersectX(out, ax, ay, bx, by, x) {
-  final t = (x - ax) / (bx - ax);
-  addPoint(out, x, ay + (by - ay) * t, 1);
-  return t;
+void intersectX(out, ax, ay, bx, by, x) {
+  //final t = (x - ax) / (bx - ax);
+  //addPoint(out, x, ay + (by - ay) * t, 1);
+  addPoint(out, x, ay + (x - ax) * (by - ay) / (bx - ax), 1);
+  //return t;
 }
 
-double intersectY(out, ax, ay, bx, by, y) {
-  final t = (y - ay) / (by - ay);
-  addPoint(out, ax + (bx - ax) * t, y, 1);
-  return t;
+void intersectY(out, ax, ay, bx, by, y) {
+  //final t = (y - ay) / (by - ay);
+  //addPoint(out, ax + (bx - ax) * t, y, 1);
+  addPoint(out, ax + (y - ay) * (bx - ax) / (by - ay), y, 1);
+  //return t;
 }
 
 void addPoint(out, x, y, z) {
